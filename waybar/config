@@ -1,0 +1,57 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 0,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-bottom": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "exclusive": true,
+
+    "modules-left": ["clock"],
+    "modules-center": ["ext/workspaces"],
+    "modules-right": ["bluetooth", "pulseaudio", "battery"],
+
+    "ext/workspaces": {
+        "format": "",
+        "on-click": "activate",
+        "sort-by-id": true,
+    },
+
+
+    "pulseaudio": {
+        "format": "{icon} {volume}",
+        "format-muted": " {volume}",
+        "format-icons": [" "],
+        "on-click": "pavucontrol",
+        "scroll-step": 5,
+        "tooltip": false
+    },
+
+    "bluetooth": {
+        "format": "",
+        "format-on": "",
+        "format-connected": " {device_battery_percentage}",
+        "tooltip": false
+    },
+
+    "battery": {
+        "format": "{icon} {capacity}",
+        "format-charging": " {capacity}",
+        "format-plugged": " {capacity}",
+        "format-icons": [" ", " ", " ", " ", " "],
+        "interval": 30,
+        "tooltip": false,
+        "states": {
+            "warning": 25,
+            "critical": 15
+        }
+    },
+
+    "clock": {
+        "format": "{:%I:%M %p}",
+        "interval": 60,
+        "tooltip": false
+    }
+}

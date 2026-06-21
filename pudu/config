@@ -1,0 +1,43 @@
+PUDU_MOD Super
+
+autostart {
+    swaybg -i ~/wallpaper.png -m fill
+    waybar
+    mako
+}
+
+ui {
+    inner_gap           5
+    outer_gap           5
+    border_size         2
+    border_radius       6
+    border_active       #005dcf
+    border_inactive     #1c1c1c
+    border_transition   100
+    new_is_master       false
+    workspace_count     5
+}
+
+input {
+    natural_scroll      true
+}
+
+binds {
+    Super+Space          wofi --show drun
+    Super+C              PUDU_CLOSE
+    Super+Escape         PUDU_EXIT
+    Super+R              PUDU_RELOAD
+    Super+Return         kitty
+
+    Super+Left           PUDU_WORKSPACE_PREV
+    Super+Right          PUDU_WORKSPACE_NEXT
+    Super+Shift+Left     PUDU_WORKSPACE_MOVE_PREV
+    Super+Shift+Right    PUDU_WORKSPACE_MOVE_NEXT
+
+XF86AudioRaiseVolume wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+XF86AudioLowerVolume wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+XF86AudioMute wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle
+XF86MonBrightnessUp brightnessctl set +5%
+XF86MonBrightnessDown brightnessctl set 5%-
+}
+
