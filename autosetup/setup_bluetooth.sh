@@ -17,49 +17,24 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-info "Detectando gestor de paquetes..."
-if command -v apt &>/dev/null; then
-    PKG_MANAGER="apt"
-    INSTALL_CMD="apt install -y"
-    PACKAGES=(blueman bluez bluez-tools rfkill)
-elif command -v dnf &>/dev/null; then
-    PKG_MANAGER="dnf"
-    INSTALL_CMD="dnf install -y"
-    PACKAGES=(blueman bluez bluez-tools)
-elif command -v pacman &>/dev/null; then
-    PKG_MANAGER="pacman"
-    INSTALL_CMD="pacman -S --noconfirm"
-    PACKAGES=(blueman bluez bluez-utils)
-elif command -v zypper &>/dev/null; then
-    PKG_MANAGER="zypper"
-    INSTALL_CMD="zypper install -y"
-    PACKAGES=(blueman bluez bluez-tools)
-else
-    error "No se pudo detectar el gestor de paquetes. Compatibles: apt, dnf, pacman, zypper."
+if ! command -v pacman &>/dev/null; then
+    error "Este script solo funciona en Arch Linux."
     exit 1
 fi
-ok "Gestor detectado: $PKG_MANAGER"
 
-info "Verificando e instalando paquetes necesarios..."
+PACKAGES=(blueman bluez bluez-utils pipewire-pulse)
+
+info "Verificando e instalando paquetes..."
 MISSING=()
 for pkg in "${PACKAGES[@]}"; do
-    case "$PKG_MANAGER" in
-        apt)
-            dpkg -s "$pkg" &>/dev/null || MISSING+=("$pkg") ;;
-        dnf)
-            rpm -q "$pkg" &>/dev/null || MISSING+=("$pkg") ;;
-        pacman)
-            pacman -Qi "$pkg" &>/dev/null || MISSING+=("$pkg") ;;
-        zypper)
-            rpm -q "$pkg" &>/dev/null || MISSING+=("$pkg") ;;
-    esac
+    pacman -Qi "$pkg" &>/dev/null || MISSING+=("$pkg")
 done
 
 if [[ ${#MISSING[@]} -eq 0 ]]; then
     ok "Todos los paquetes ya están instalados."
 else
     warn "Faltan: ${MISSING[*]}. Instalando..."
-    $INSTALL_CMD "${MISSING[@]}"
+    pacman -S --noconfirm "${MISSING[@]}"
     ok "Paquetes instalados correctamente."
 fi
 
@@ -72,6 +47,16 @@ else
     warn "El servicio bluetooth no se inició. Revisa: systemctl status bluetooth"
 fi
 
+info "Configurando pipewire-pulse (audio Bluetooth)..."
+if systemctl --user list-unit-files pipewire-pulse.service &>/dev/null 2>&1; then
+    systemctl --user enable --now pipewire-pulse.service 2>/dev/null || true
+    if systemctl --user is-active --quiet pipewire-pulse.service 2>/dev/null; then
+        ok "pipewire-pulse activo."
+    fi
+else
+    warn "pipewire-pulse no encontrado. ¿Seguro que está instalado?"
+fi
+
 info "Verificando que el adaptador Bluetooth no esté bloqueado..."
 if command -v rfkill &>/dev/null; then
     rfkill unblock bluetooth
@@ -79,10 +64,6 @@ if command -v rfkill &>/dev/null; then
 fi
 
 info "Estado del adaptador Bluetooth:"
-if command -v hciconfig &>/dev/null; then
-    hciconfig -a 2>/dev/null | head -5 || echo "  (sin adaptadores visibles vía hciconfig)"
-fi
-
 if command -v bluetoothctl &>/dev/null; then
     echo -e "  bluetoothctl show:"
     bluetoothctl show 2>/dev/null | grep -E "(Controller|Powered|Discoverable|Pairable)" | sed 's/^/    /' || echo "  (no se pudo obtener info de bluetoothctl)"
@@ -100,4 +81,4 @@ fi
 info "Resumen de servicios:"
 systemctl status bluetooth.service --no-pager 2>&1 | head -5 | sed 's/^/  /'
 echo ""
-ok "Script completado. Si todo está verde, tu Bluetooth debería funcionar."
+ok "Script completado."
